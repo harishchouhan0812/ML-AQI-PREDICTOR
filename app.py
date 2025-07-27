@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 import time
@@ -60,7 +60,7 @@ st.markdown("""
         margin-top: 10px;
         border-left: 5px solid #7c3aed !important;
         font-family: 'Arial', sans-serif;
-        color: #2c3e50 !important; /* Ensure text is visible */
+        color: #2c3e50 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -68,7 +68,9 @@ st.markdown("""
 # Load model with caching
 @st.cache_resource
 def load_model():
-    return joblib.load('aqi_predictor_model.pkl')
+    with open('aqi_predictor_model.pkl', 'rb') as f:
+        model = pickle.load(f)
+    return model
 
 # Load data with caching
 @st.cache_data
@@ -88,42 +90,57 @@ aqi_recommendations = {
         Actions: Enjoy outdoor activities without restrictions.
         Tips: Continue monitoring air quality for any unexpected changes.
     """,
-    'Moderate': """
+    'Satisfactory': """
         Health: Air quality is acceptable; however, some pollutants may affect sensitive individuals.
         Actions: Sensitive groups (e.g., those with respiratory issues) should reduce prolonged outdoor exertion.
         Tips: Use air purifiers indoors and keep windows closed during peak pollution hours.
     """,
-    'Unhealthy for Sensitive Groups': """
-         Health: Members of sensitive groups may experience health effects; the general public is less likely to be affected.
-         Actions: Sensitive groups should avoid prolonged outdoor activities. Others should limit exertion.
-         Tips: Wear masks (e.g., N95) outdoors and ensure good indoor ventilation.
+    'Moderate': """
+        Health: Members of sensitive groups may experience health effects; the general public is less likely to be affected.
+        Actions: Sensitive groups should avoid prolonged outdoor activities. Others should limit exertion.
+        Tips: Wear masks (e.g., N95) outdoors and ensure good indoor ventilation.
     """,
-    'Unhealthy': """
-         Health: Everyone may begin to experience health effects; sensitive groups face more serious effects.
-         Actions: Avoid outdoor activities, especially strenuous ones. Stay indoors with air purifiers.
-         Tips: Seal windows and doors, and use HEPA filters to reduce indoor pollutants.
+    'Poor': """
+        Health: Everyone may begin to experience health effects; sensitive groups face more serious effects.
+        Actions: Avoid outdoor activities, especially strenuous ones. Stay indoors with air purifiers.
+        Tips: Seal windows and doors, and use HEPA filters to reduce indoor pollutants.
     """,
-    'Very Unhealthy': """
-         Health: Health alert: everyone may experience serious health effects.
+    'Very Poor': """
+        Health: Health alert: everyone may experience serious health effects.
         Actions: Stay indoors and avoid all outdoor activities. Use air purifiers continuously.
         Tips: Monitor health symptoms and seek medical advice if respiratory issues arise.
     """,
-    'Hazardous': """
+    'Severe': """
         Health: Emergency conditions; the entire population is likely to be affected.
         Actions: Remain indoors with all windows and doors sealed. Avoid any physical activity.
         Tips: Use high-quality air purifiers and consult a doctor for any breathing difficulties.
     """
 }
 
+# Function to get AQI category based on numerical AQI value
+def get_aqi_category(aqi):
+    if aqi <= 50:
+        return "Good"
+    elif aqi <= 100:
+        return "Satisfactory"
+    elif aqi <= 200:
+        return "Moderate"
+    elif aqi <= 300:
+        return "Poor"
+    elif aqi <= 400:
+        return "Very Poor"
+    else:
+        return "Severe"
+
 # Function to get AQI category class for styling
 def get_aqi_category_class(aqi_category):
     category_map = {
         'Good': 'aqi-good',
-        'Moderate': 'aqi-moderate',
-        'Unhealthy for Sensitive Groups': 'aqi-unhealthy-sensitive',
-        'Unhealthy': 'aqi-unhealthy',
-        'Very Unhealthy': 'aqi-very-unhealthy',
-        'Hazardous': 'aqi-hazardous'
+        'Satisfactory': 'aqi-moderate',
+        'Moderate': 'aqi-unhealthy-sensitive',
+        'Poor': 'aqi-unhealthy',
+        'Very Poor': 'aqi-very-unhealthy',
+        'Severe': 'aqi-hazardous'
     }
     return category_map.get(aqi_category, '')
 
@@ -205,10 +222,10 @@ if page == "📊 City-wise AQI":
     st.markdown(f"Trend Analysis for {city}: Visualize AQI fluctuations and pollutant contributions.")
 
 # ---------------------------------------------
-# 🔮 Page 2: Predict AQI Category
+# 🔮 Page 2: Predict AQI
 elif page == "🔮 Predict AQI":
     st.header("🔮 AQI Prediction")
-    st.markdown("Enter pollutant levels to predict the AQI category.")
+    st.markdown("Enter pollutant levels to predict the AQI value and category.")
 
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -220,12 +237,14 @@ elif page == "🔮 Predict AQI":
         o3 = st.number_input("O3 (µg/m³)", 0.0, 500.0, 30.0, step=1.0)
         
         # Predict button
-        if st.button("Predict AQI Category", key="predict_button"):
+        if st.button("Predict AQI", key="predict_button"):
             with st.spinner("Predicting..."):
                 time.sleep(1)  # Simulate processing
-                result = model.predict([[pm25, pm10, no2, co, o3]])
-                aqi_category = result[0]
-                st.markdown(f"<span class='{get_aqi_category_class(aqi_category)}'>Predicted AQI Category: {aqi_category}</span>", unsafe_allow_html=True)
+                input_data = [pm25, pm10, no2, co, o3]
+                predicted_aqi = model.predict([input_data])[0]
+                aqi_category = get_aqi_category(predicted_aqi)
+                st.write(f"Predicted AQI: {predicted_aqi:.2f}")
+                st.markdown(f"<span class='{get_aqi_category_class(aqi_category)}'>Air Quality Category: <b>{aqi_category}</b></span>", unsafe_allow_html=True)
                 st.balloons()
                 # Chatbot response
                 st.markdown("AQI Assistant:")
