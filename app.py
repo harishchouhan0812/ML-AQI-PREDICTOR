@@ -92,6 +92,7 @@ def load_model():
 def load_data():
     df = pd.read_csv("city_day.csv")
     df['Date'] = pd.to_datetime(df['Date'])
+    df['Month'] = df['Date'].dt.strftime('%b')  # Extract month abbreviation
     df = df.dropna(subset=['PM2.5', 'PM10', 'NO2', 'CO', 'O3', 'AQI'])
     jk_cities = [
         'Jammu', 'Srinagar', 'Rajouri', 'Rajoa', 'Kohlina', 'Jabah', 'Sundarbani',
@@ -310,9 +311,13 @@ if page == "📊 City-wise AQI":
     if not city_df.empty:
         with st.spinner("Loading AQI trend..."):
             fig, ax = plt.subplots(figsize=(10, 4))
-            ax.plot(city_df['Date'], city_df['AQI'], color='blue')
-            ax.set_title(f'AQI Trend for {city}')
-            ax.set_xlabel('Date')
+            # Aggregate AQI by month for the selected city
+            monthly_aqi = city_df.groupby('Month')['AQI'].mean().reindex(
+                ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            )
+            ax.plot(monthly_aqi.index, monthly_aqi.values, color='blue')
+            ax.set_title(f'Average AQI Trend for {city}')
+            ax.set_xlabel('Month')
             ax.set_ylabel('AQI')
             plt.xticks(rotation=45)
             plt.tight_layout()
@@ -387,9 +392,13 @@ elif page == "🆚 Compare Cities":
         if not city1_df.empty:
             with st.spinner(f"Loading {city1} data..."):
                 fig, ax = plt.subplots(figsize=(8, 3.5))
-                ax.plot(city1_df['Date'], city1_df['AQI'], color='blue')
-                ax.set_title(f'AQI Trend for {city1}')
-                ax.set_xlabel('Date')
+                # Aggregate AQI by month for city1
+                monthly_aqi = city1_df.groupby('Month')['AQI'].mean().reindex(
+                    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                )
+                ax.plot(monthly_aqi.index, monthly_aqi.values, color='blue')
+                ax.set_title(f'Average AQI Trend for {city1}')
+                ax.set_xlabel('Month')
                 ax.set_ylabel('AQI')
                 plt.xticks(rotation=45)
                 plt.tight_layout()
@@ -402,9 +411,13 @@ elif page == "🆚 Compare Cities":
         if not city2_df.empty:
             with st.spinner(f"Loading {city2} data..."):
                 fig, ax = plt.subplots(figsize=(8, 3.5))
-                ax.plot(city2_df['Date'], city2_df['AQI'], color='blue')
-                ax.set_title(f'AQI Trend for {city2}')
-                ax.set_xlabel('Date')
+                # Aggregate AQI by month for city2
+                monthly_aqi = city2_df.groupby('Month')['AQI'].mean().reindex(
+                    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                )
+                ax.plot(monthly_aqi.index, monthly_aqi.values, color='blue')
+                ax.set_title(f'Average AQI Trend for {city2}')
+                ax.set_xlabel('Month')
                 ax.set_ylabel('AQI')
                 plt.xticks(rotation=45)
                 plt.tight_layout()
