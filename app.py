@@ -3,9 +3,12 @@ import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.express as px
 import time
 import requests
 from io import StringIO
+import uuid
+import numpy as np
 
 # Set page configuration with a custom theme
 st.set_page_config(
@@ -43,7 +46,7 @@ st.markdown("""
         color: #2c3e50;
         font-family: 'Arial', sans-serif;
     }
-    .stSelectbox, .stDateInput {
+    .stSelectbox, .stDateInput, .stSlider {
         background-color: #ffffff;
         border-radius: 8px;
         padding: 5px;
@@ -71,6 +74,15 @@ st.markdown("""
         font-weight: bold;
         text-align: center;
     }
+    .assistant-response {
+        background-color: #e6f3ff;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 10px;
+        border-left: 5px solid #1e90ff;
+        font-family: 'Arial', sans-serif;
+        color: #2c3e50;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -87,13 +99,26 @@ def load_data():
     df = pd.read_csv("city_day.csv")
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.dropna(subset=['PM2.5', 'PM10', 'NO2', 'CO', 'O3', 'AQI'])
-    return df
+    
+    # Predefined list of Jammu and Kashmir cities with AQI data
+    jk_cities = [
+        'Jammu', 'Srinagar', 'Rajouri', 'Rajoa', 'Kohlina', 'Jabah', 'Sundarbani',
+        'Anantnag', 'Baramulla', 'Budgam', 'Kathua', 'Pampore', 'Pulwama', 'Udhampur'
+    ]
+    
+    # Get unique cities from the dataset
+    dataset_cities = sorted(df['City'].unique())
+    
+    # Combine dataset cities with Jammu and Kashmir cities, removing duplicates
+    all_cities = sorted(list(set(dataset_cities + jk_cities)))
+    
+    return df, all_cities
 
 # Function to fetch live AQI data
 def get_live_aqi(city_name):
     url = f"https://api.waqi.info/feed/{city_name}/?token=fe0547e431226e44d33b4d50af849d737783f9de"
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
         data = response.json()
         if data["status"] == "ok":
             aqi = data["data"]["aqi"]
@@ -103,8 +128,62 @@ def get_live_aqi(city_name):
     except:
         return None
 
+# Function to fetch weather data
+def get_weather_data(city_name):
+    api_key = "your_openweathermap_api_key"  # Replace with your OpenWeatherMap API key
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}&units=metric"
+    try:
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        if data["cod"] == 200:
+            return {
+                "temperature": data["main"]["temp"],
+                "humidity": data["main"]["humidity"],
+                "wind_speed": data["wind"]["speed"]
+            }
+        else:
+            return None
+    except:
+        return None
+
+# Function to estimate AQI reduction from tree planting
+def estimate_tree_impact(num_trees, current_aqi):
+    # Assumptions: Each tree reduces PM2.5 by ~0.3 µg/m³ annually and CO2 by ~48 lbs (0.022 metric tons)
+    pm25_reduction = num_trees * 0.3 / 10000  # Scaled for city-level impact
+    co2_reduction = num_trees * 0.022  # Metric tons per year
+    
+    # Approximate AQI reduction (simplified, based on PM2.5 contribution)
+    aqi_reduction = pm25_reduction * 2  # Rough conversion to AQI points
+    new_aqi = max(0, current_aqi - aqi_reduction)
+    
+    return {
+        "new_aqi": new_aqi,
+        "pm25_reduction": pm25_reduction,
+        "co2_reduction": co2_reduction,
+        "category": get_aqi_category(new_aqi)
+    }
+
+# Function to estimate AQI reduction from car removal
+def estimate_car_removal_impact(num_cars, current_aqi):
+    # Assumptions: Each car emits ~4.6 metric tons CO2, 0.3 µg/m³ PM2.5, 0.1 µg/m³ NO2 annually
+    pm25_reduction = num_cars * 0.3 / 1000  # Scaled for city-level impact
+    co2_reduction = num_cars * 4.6  # Metric tons per year
+    no2_reduction = num_cars * 0.1 / 1000
+    
+    # Approximate AQI reduction (simplified, based on PM2.5 and NO2)
+    aqi_reduction = (pm25_reduction * 2 + no2_reduction * 1.5)  # Rough conversion
+    new_aqi = max(0, current_aqi - aqi_reduction)
+    
+    return {
+        "new_aqi": new_aqi,
+        "pm25_reduction": pm25_reduction,
+        "co2_reduction": co2_reduction,
+        "no2_reduction": no2_reduction,
+        "category": get_aqi_category(new_aqi)
+    }
+
 model = load_model()
-df = load_data()
+df, all_cities = load_data()
 
 # Enhanced AQI Recommendations Dictionary
 aqi_recommendations = {
@@ -217,7 +296,7 @@ def get_aqi_category_class(aqi_category):
 
 # UI Title with emoji
 st.title("🌿 Air Quality Index (AQI) Dashboard")
-st.markdown("Explore air quality trends across cities with interactive visualizations, predictions, and live alerts.")
+st.markdown("Explore air quality trends across cities with interactive visualizations, predictions, and personalized AQI assistance.")
 
 # Sidebar with enhanced styling
 with st.sidebar:
@@ -230,7 +309,8 @@ with st.sidebar:
             "🆚 Compare Cities",
             "🔥 Heatmap",
             "🏆 Top 10 Polluted Cities",
-            "🚨 Live AQI Alerts"
+            "🚨 Live AQI Alerts",
+            "🌱 AQI Assistant"
         ],
         format_func=lambda x: x[2:]  # Remove emoji for cleaner selectbox
     )
@@ -248,7 +328,7 @@ with st.sidebar:
             These parameters are measured in units like µg/m³ (micrograms per cubic meter) or mg/m³ (milligrams per cubic meter) and are combined using a standardized formula to compute the AQI, which ranges from 0 (good) to 500 (hazardous).
         """)
     st.markdown("---")
-    st.info("Select a view to explore AQI data, predict air quality, or check live alerts.")
+    st.info("Select a view to explore AQI data, predict air quality, or get personalized assistance.")
 
 # ---------------------------------------------
 # 📊 Page 1: City-wise AQI Viewer
@@ -256,41 +336,40 @@ if page == "📊 City-wise AQI":
     st.header("📊 City-wise AQI Trends")
     col1, col2 = st.columns([3, 1])
     with col1:
-        city = st.selectbox("Select a city", sorted(df['City'].unique()), key="city_select")
+        city = st.selectbox("Select a city", all_cities, key="city_select")
     
     # Filter data by the entire available dataset
     city_df = df[df['City'] == city]
     
-    with st.spinner("Loading AQI trend..."):
-        st.line_chart(
-            city_df.set_index('Date')['AQI'],
-            height=400,
-            use_container_width=True
+    if not city_df.empty:
+        with st.spinner("Loading AQI trend..."):
+            fig = px.line(city_df, x='Date', y='AQI', title=f'AQI Trend for {city}', height=400)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Summary Table
+        st.subheader("AQI Summary Statistics")
+        summary = city_df['AQI'].agg(['mean', 'min', 'max']).to_frame().T
+        summary.columns = ['Mean AQI', 'Min AQI', 'Max AQI']
+        st.table(summary.round(2))
+        
+        # Pollutant Contribution Pie Chart
+        st.subheader("Pollutant Contribution")
+        pollutants = ['PM2.5', 'PM10', 'NO2', 'CO', 'O3']
+        pollutant_means = city_df[pollutants].mean()
+        fig = px.pie(values=pollutant_means, names=pollutants, title='Pollutant Contribution')
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Download Button
+        csv = city_df.to_csv(index=False)
+        st.download_button(
+            label="Download City Data as CSV",
+            data=csv,
+            file_name=f"{city}_aqi_data.csv",
+            mime="text/csv"
         )
+    else:
+        st.warning(f"No historical AQI data available for {city}. Try checking live AQI in the 'Live AQI Alerts' page.")
     
-    # Summary Table
-    st.subheader("AQI Summary Statistics")
-    summary = city_df['AQI'].agg(['mean', 'min', 'max']).to_frame().T
-    summary.columns = ['Mean AQI', 'Min AQI', 'Max AQI']
-    st.table(summary.round(2))
-    
-    # Pollutant Contribution Pie Chart
-    st.subheader("Pollutant Contribution")
-    pollutants = ['PM2.5', 'PM10', 'NO2', 'CO', 'O3']
-    pollutant_means = city_df[pollutants].mean()
-    fig, ax = plt.subplots()
-    ax.pie(pollutant_means, labels=pollutants, autopct='%1.1f%%', startangle=90)
-    ax.axis('equal')
-    st.pyplot(fig)
-    
-    # Download Button
-    csv = city_df.to_csv(index=False)
-    st.download_button(
-        label="Download City Data as CSV",
-        data=csv,
-        file_name=f"{city}_aqi_data.csv",
-        mime="text/csv"
-    )
     st.markdown(f"Trend Analysis for {city}: Visualize AQI fluctuations and pollutant contributions.")
 
 # ---------------------------------------------
@@ -328,13 +407,12 @@ elif page == "🔮 Predict AQI":
 # 🆚 Page 3: Compare Two Cities
 elif page == "🆚 Compare Cities":
     st.header("🆚 Compare AQI Between Cities")
-    cities = sorted(df['City'].unique())
     
     col1, col2 = st.columns(2)
     with col1:
-        city1 = st.selectbox("City 1", cities, index=0, key="city1_select")
+        city1 = st.selectbox("City 1", all_cities, index=0, key="city1_select")
     with col2:
-        city2 = st.selectbox("City 2", cities, index=1, key="city2_select")
+        city2 = st.selectbox("City 2", all_cities, index=1, key="city2_select")
     
     # Filter data without date range
     city1_df = df[df['City'] == city1]
@@ -343,31 +421,32 @@ elif page == "🆚 Compare Cities":
     col1, col2 = st.columns(2)
     with col1:
         st.subheader(f"AQI Trend: {city1}")
-        with st.spinner(f"Loading {city1} data..."):
-            st.line_chart(
-                city1_df.set_index('Date')['AQI'],
-                height=350,
-                use_container_width=True
-            )
+        if not city1_df.empty:
+            with st.spinner(f"Loading {city1} data..."):
+                fig = px.line(city1_df, x='Date', y='AQI', title=f'AQI Trend for {city1}', height=350)
+                st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning(f"No historical AQI data available for {city1}.")
     
     with col2:
         st.subheader(f"AQI Trend: {city2}")
-        with st.spinner(f"Loading {city2} data..."):
-            st.line_chart(
-                city2_df.set_index('Date')['AQI'],
-                height=350,
-                use_container_width=True
-            )
+        if not city2_df.empty:
+            with st.spinner(f"Loading {city2} data..."):
+                fig = px.line(city2_df, x='Date', y='AQI', title=f'AQI Trend for {city2}', height=350)
+                st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.warning(f"No historical AQI data available for {city2}.")
     
     # Download Button for Comparison Data
     combined_df = pd.concat([city1_df, city2_df])
-    csv = combined_df.to_csv(index=False)
-    st.download_button(
-        label="Download Comparison Data as CSV",
-        data=csv,
-        file_name=f"{city1}_vs_{city2}_aqi_data.csv",
-        mime="text/csv"
-    )
+    if not combined_df.empty:
+        csv = combined_df.to_csv(index=False)
+        st.download_button(
+            label="Download Comparison Data as CSV",
+            data=csv,
+            file_name=f"{city1}_vs_{city2}_aqi_data.csv",
+            mime="text/csv"
+        )
 
 # ---------------------------------------------
 # 🔥 Page 4: Heatmap of AQI by Month and City
@@ -375,12 +454,10 @@ elif page == "🔥 Heatmap":
     st.header("🔥 AQI Heatmap by Month and City")
     with st.spinner("Generating heatmap..."):
         heat_df = df.copy()
-        heat_df['Month'] = heat_df['Date'].dt.month
+        heat_df['Month'] = heat_df['Date'].dt.month_name()
         pivot = heat_df.pivot_table(index='City', columns='Month', values='AQI', aggfunc='mean')
-        fig, ax = plt.subplots(figsize=(15, 10))
-        sns.heatmap(pivot, cmap="YlOrRd", ax=ax, annot=True, fmt=".1f", cbar_kws={'label': 'AQI'})
-        ax.set_title("Average AQI by City and Month")
-        st.pyplot(fig)
+        fig = px.imshow(pivot, text_auto=".1f", color_continuous_scale='YlOrRd', title="Average AQI by City and Month")
+        st.plotly_chart(fig, use_container_width=True)
     st.markdown("Insight: Red indicates higher AQI (worse air quality). Compare monthly patterns across cities.")
 
 # ---------------------------------------------
@@ -389,11 +466,8 @@ elif page == "🏆 Top 10 Polluted Cities":
     st.header("🏆 Top 10 Most Polluted Cities")
     with st.spinner("Calculating rankings..."):
         avg_aqi = df.groupby('City')['AQI'].mean().sort_values(ascending=False).head(10)
-        st.bar_chart(
-            avg_aqi,
-            height=400,
-            use_container_width=True
-        )
+        fig = px.bar(x=avg_aqi.values, y=avg_aqi.index, orientation='h', title="Top 10 Most Polluted Cities", labels={'x': 'Average AQI', 'y': 'City'})
+        st.plotly_chart(fig, use_container_width=True)
     st.markdown("Insight: These cities have the highest average AQI, indicating poorer air quality.")
 
 # ---------------------------------------------
@@ -402,17 +476,28 @@ elif page == "🚨 Live AQI Alerts":
     st.header("🚨 Live AQI Alerts")
     st.markdown("Check real-time AQI for a selected city and receive alerts if air quality is poor.")
 
-    city = st.selectbox("Select a city for live AQI", sorted(df['City'].unique()), key="live_city_select")
+    city = st.selectbox("Select a city for live AQI", all_cities, key="live_city_select")
     
     with st.spinner(f"Fetching live AQI for {city}..."):
-        live_aqi = get_live_aqi(city.lower())  # API expects lowercase city names
+        live_aqi = get_live_aqi(city.lower())
         if live_aqi is not None:
             aqi_category = get_aqi_category(live_aqi)
             st.write(f"Live AQI for {city}: {live_aqi:.2f}")
             st.markdown(f"<span class='{get_aqi_category_class(aqi_category)}'>Air Quality Category: <b>{aqi_category}</b></span>", unsafe_allow_html=True)
             
+            # Weather Data
+            weather = get_weather_data(city.lower())
+            if weather:
+                st.markdown(f"""
+                    <h3>Weather Context</h3>
+                    Temperature: {weather['temperature']}°C<br>
+                    Humidity: {weather['humidity']}%<br>
+                    Wind Speed: {weather['wind_speed']} m/s<br>
+                    <i>High humidity and low wind speed can trap pollutants, worsening AQI.</i>
+                """, unsafe_allow_html=True)
+            
             # High AQI Alert
-            if live_aqi > 100:  # Alert for Moderate or worse
+            if live_aqi > 100:
                 st.markdown(f"<div class='alert-high-aqi'>⚠️ High AQI Alert: Take precautions as air quality is {aqi_category.lower()}!</div>", unsafe_allow_html=True)
             
             # AQI Assistant Recommendations
@@ -422,4 +507,102 @@ elif page == "🚨 Live AQI Alerts":
             # Long-term consequences
             st.markdown(long_term_consequences, unsafe_allow_html=True)
         else:
-            st.error(f"Unable to fetch live AQI data for {city}. Please try another city or check your connection.")
+            st.error(f"Unable to fetch live AQI data for {city}. This city may not have an active monitoring station. Try another city or check your connection.")
+
+# ---------------------------------------------
+# 🌱 Page 7: AQI Assistant
+elif page == "🌱 AQI Assistant":
+    st.header("🌱 Advanced AQI Assistant")
+    st.markdown("Your personal AQI Assistant provides tailored recommendations and estimates the impact of environmental actions like tree planting or car removal.")
+
+    # User Inputs
+    st.subheader("Your Profile")
+    col1, col2 = st.columns(2)
+    with col1:
+        current_aqi = st.number_input("Current AQI", 0.0, 500.0, 100.0, step=1.0)
+        health_conditions = st.multiselect(
+            "Select Health Conditions",
+            ["None", "Asthma", "Heart Disease", "Elderly", "Children", "Pregnancy"],
+            default=["None"]
+        )
+    with col2:
+        city = st.selectbox("Select City", all_cities, key="assistant_city_select")
+        action = st.selectbox("Select Action to Explore", ["None", "Plant Trees", "Remove Cars"])
+
+    # Weather Context
+    weather = get_weather_data(city.lower())
+    if weather:
+        st.markdown(f"""
+            <h3>Weather Context for {city}</h3>
+            Temperature: {weather['temperature']}°C<br>
+            Humidity: {weather['humidity']}%<br>
+            Wind Speed: {weather['wind_speed']} m/s<br>
+            <i>High humidity and low wind speed can trap pollutants, worsening AQI.</i>
+        """, unsafe_allow_html=True)
+
+    # Health-Based Recommendations
+    st.subheader("Personalized Health Recommendations")
+    aqi_category = get_aqi_category(current_aqi)
+    recommendation = aqi_recommendations.get(aqi_category, "No recommendations available.")
+    if "None" not in health_conditions:
+        recommendation += "<br><b>Special Note</b>: Due to your health conditions ({}), take extra precautions such as using a medical-grade air purifier and consulting a doctor if symptoms worsen.".format(", ".join(health_conditions))
+    st.markdown(f"<div class='chatbot-message'>{recommendation}</div>", unsafe_allow_html=True)
+
+    # Action Impact Analysis
+    if action != "None":
+        st.subheader(f"Impact of {action}")
+        if action == "Plant Trees":
+            num_trees = st.slider("Number of Trees (10,000 - 100,000)", 10000, 100000, 10000, step=1000)
+            impact = estimate_tree_impact(num_trees, current_aqi)
+            st.markdown(f"""
+                <div class='assistant-response'>
+                <b>Impact of Planting {num_trees:,} Trees in {city}</b><br>
+                - Estimated AQI Reduction: {current_aqi - impact['new_aqi']:.2f} points<br>
+                - New AQI: {impact['new_aqi']:.2f} ({impact['category']})<br>
+                - PM2.5 Reduction: {impact['pm25_reduction']:.2f} µg/m³<br>
+                - CO2 Reduction: {impact['co2_reduction']:.2f} metric tons/year<br>
+                <b>Context</b>: Trees absorb PM2.5 and CO2, improving air quality over time. In Jammu and Kashmir, planting native species like pine or cedar can enhance local ecosystems.
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Visualization
+            fig = px.bar(
+                x=['Current AQI', 'New AQI'],
+                y=[current_aqi, impact['new_aqi']],
+                title="AQI Before and After Planting Trees",
+                labels={'y': 'AQI', 'x': 'Scenario'}
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+        elif action == "Remove Cars":
+            num_cars = st.slider("Number of Cars Removed (1,000 - 10,000)", 1000, 10000, 1000, step=100)
+            impact = estimate_car_removal_impact(num_cars, current_aqi)
+            st.markdown(f"""
+                <div class='assistant-response'>
+                <b>Impact of Removing {num_cars:,} Cars in {city}</b><br>
+                - Estimated AQI Reduction: {current_aqi - impact['new_aqi']:.2f} points<br>
+                - New AQI: {impact['new_aqi']:.2f} ({impact['category']})<br>
+                - PM2.5 Reduction: {impact['pm25_reduction']:.2f} µg/m³<br>
+                - NO2 Reduction: {impact['no2_reduction']:.2f} µg/m³<br>
+                - CO2 Reduction: {impact['co2_reduction']:.2f} metric tons/year<br>
+                <b>Context</b>: In Jammu and Kashmir, vehicular emissions are a major pollution source. Reducing cars promotes cleaner air and reduces traffic-related PM2.5 and NO2.
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Visualization
+            fig = px.bar(
+                x=['Current AQI', 'New AQI'],
+                y=[current_aqi, impact['new_aqi']],
+                title="AQI Before and After Removing Cars",
+                labels={'y': 'AQI', 'x': 'Scenario'}
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+    # Regional Insights for Jammu and Kashmir
+    if city in ['Jammu', 'Srinagar', 'Rajouri', 'Rajoa', 'Kohlina', 'Jabah', 'Sundarbani', 'Anantnag', 'Baramulla', 'Budgam', 'Kathua', 'Pampore', 'Pulwama', 'Udhampur']:
+        st.markdown("""
+            <div class='assistant-response'>
+            <b>Jammu and Kashmir Pollution Insights</b><br>
+            Air pollution in Jammu and Kashmir is driven by vehicular emissions, biomass burning, and industrial activities like brick kilns. Rajouri, for example, has high PM2.5 levels (often >100 µg/m³), posing health risks. Actions like promoting electric vehicles and afforestation can significantly improve air quality in these regions.
+            </div>
+        """, unsafe_allow_html=True)
