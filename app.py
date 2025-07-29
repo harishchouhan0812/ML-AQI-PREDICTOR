@@ -549,7 +549,7 @@ elif page == "🌱 AQI Assistant":
                 - PM2.5 Reduction: {impact['pm25_reduction']:.2f} µg/m³<br>
                 - NO2 Reduction: {impact['no2_reduction']:.2f} µg/m³<br>
                 - CO2 Reduction: {impact['co2_reduction']:.2f} metric tons/year<br>
-                <b>Context</b>: In Jammu and Kashmir, vehicular emissions are a major pollution source. Reducing cars promotes cleaner air and reduces traffic-related PM2.5 and NO2.
+                <b>Context</b>: In your city, vehicular emissions are a major pollution source. Reducing cars promotes cleaner air and reduces traffic-related PM2.5 and NO2.
                 </div>
             """, unsafe_allow_html=True)
             
