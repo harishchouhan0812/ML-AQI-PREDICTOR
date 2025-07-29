@@ -109,83 +109,83 @@ df = load_data()
 # Enhanced AQI Recommendations Dictionary
 aqi_recommendations = {
     'Good': """
-        **Health**: Air quality is excellent, posing no health risks for anyone.  
-        **Actions**: Enjoy outdoor activities like jogging, cycling, or family picnics without restrictions.  
-        **Tips**:  
+        <b>Health</b>: Air quality is excellent, posing no health risks for anyone.  
+        <b>Actions</b>: Enjoy outdoor activities like jogging, cycling, or family picnics without restrictions.  
+        <b>Tips</b>:  
         - Take advantage of clean air to boost your physical and mental health through outdoor exercise.  
         - Open windows to naturally ventilate your home and improve indoor air quality.  
         - Support community initiatives like tree planting to maintain good air quality.  
-        **Pro Tip**: Use this opportunity to promote eco-friendly habits, such as cycling or walking instead of driving, to keep the air clean!
+        <b>Pro Tip</b>: Use this opportunity to promote eco-friendly habits, such as cycling or walking instead of driving, to keep the air clean!
     """,
     'Satisfactory': """
-        **Health**: Air quality is acceptable, but sensitive groups (e.g., those with asthma or allergies) may experience mild discomfort.  
-        **Actions**: Sensitive individuals should limit prolonged outdoor exertion, especially during midday when pollution peaks.  
-        **Tips**:  
+        <b>Health</b>: Air quality is acceptable, but sensitive groups (e.g., those with asthma or allergies) may experience mild discomfort.  
+        <b>Actions</b>: Sensitive individuals should limit prolonged outdoor exertion, especially during midday when pollution peaks.  
+        <b>Tips</b>:  
         - Use air purifiers with HEPA filters to keep indoor air clean and safe.  
         - Wear a mask (e.g., N95) if spending extended time outdoors.  
         - Stay updated with real-time air quality apps to plan outdoor activities.  
-        **Pro Tip**: Incorporate air-purifying plants like peace lilies or snake plants indoors to enhance air quality naturally!
+        <b>Pro Tip</b>: Incorporate air-purifying plants like peace lilies or snake plants indoors to enhance air quality naturally!
     """,
     'Moderate': """
-        **Health**: Sensitive groups (e.g., children, elderly, or those with respiratory conditions) may experience health effects; the general public is less affected.  
-        **Actions**: Sensitive groups should avoid strenuous outdoor activities; others should reduce prolonged exposure.  
-        **Tips**:  
+        <b>Health</b>: Sensitive groups (e.g., children, elderly, or those with respiratory conditions) may experience health effects; the general public is less affected.  
+        <b>Actions</b>: Sensitive groups should avoid strenuous outdoor activities; others should reduce prolonged exposure.  
+        <b>Tips</b>:  
         - Wear N95 masks during outdoor activities to minimize pollutant inhalation.  
         - Schedule outdoor time for early morning or evening when pollution levels are typically lower.  
         - Use air quality monitoring apps to stay informed about real-time AQI changes.  
-        **Pro Tip**: Invest in a high-quality air purifier for your home to create a safe indoor environment!
+        <b>Pro Tip</b>: Invest in a high-quality air purifier for your home to create a safe indoor environment!
     """,
     'Poor': """
-        **Health**: Everyone may experience health effects, with sensitive groups facing severe symptoms like coughing or breathing difficulties.  
-        **Actions**: Avoid all outdoor activities, especially strenuous ones, and stay indoors with air purifiers running.  
-        **Tips**:  
+        <b>Health</b>: Everyone may experience health effects, with sensitive groups facing severe symptoms like coughing or breathing difficulties.  
+        <b>Actions</b>: Avoid all outdoor activities, especially strenuous ones, and stay indoors with air purifiers running.  
+        <b>Tips</b>:  
         - Seal windows and doors to block polluted air from entering your home.  
         - Use air purifiers with both HEPA and activated carbon filters for maximum pollutant removal.  
         - Stay hydrated and avoid indoor pollutant sources like incense or candles.  
-        **Pro Tip**: Advocate for cleaner air by supporting local policies for reduced emissions, such as promoting public transport or green energy!
+        <b>Pro Tip</b>: Advocate for cleaner air by supporting local policies for reduced emissions, such as promoting public transport or green energy!
     """,
     'Very Poor': """
-        **Health**: Serious health risks for everyone, including worsened respiratory and cardiovascular issues, even in healthy individuals.  
-        **Actions**: Stay indoors at all times, avoiding any outdoor exposure, and keep air purifiers running continuously.  
-        **Tips**:  
+        <b>Health</b>: Serious health risks for everyone, including worsened respiratory and cardiovascular issues, even in healthy individuals.  
+        <b>Actions</b>: Stay indoors at all times, avoiding any outdoor exposure, and keep air purifiers running continuously.  
+        <b>Tips</b>:  
         - Monitor for symptoms like shortness of breath or chest pain and seek medical advice if needed.  
         - Use a humidifier to ease respiratory discomfort caused by dry air.  
         - Avoid indoor activities that generate pollutants, such as smoking or burning candles.  
-        **Pro Tip**: Join community efforts to reduce pollution, like campaigns against vehicle idling or industrial emissions, to protect future air quality!
+        <b>Pro Tip</b>: Join community efforts to reduce pollution, like campaigns against vehicle idling or industrial emissions, to protect future air quality!
     """,
     'Severe': """
-        **Health**: Emergency conditions with significant health risks for all, including severe respiratory and heart issues.  
-        **Actions**: Remain indoors with all windows and doors sealed, avoiding any physical activity, indoors or out.  
-        **Tips**:  
+        <b>Health</b>: Emergency conditions with significant health risks for all, including severe respiratory and heart issues.  
+        <b>Actions</b>: Remain indoors with all windows and doors sealed, avoiding any physical activity, indoors or out.  
+        <b>Tips</b>:  
         - Use medical-grade air purifiers to ensure safe indoor air quality.  
         - Seek immediate medical help if you experience breathing difficulties or heart palpitations.  
         - Avoid cooking methods that produce smoke, like frying, to minimize indoor pollutants.  
-        **Pro Tip**: Become an advocate for stricter air quality regulations to prevent severe AQI events and protect public health!
+        <b>Pro Tip</b>: Become an advocate for stricter air quality regulations to prevent severe AQI events and protect public health!
     """
 }
 
 # Long-term Consequences of Not Taking Precautions
 long_term_consequences = """
-### 🚨 Long-term Consequences of Ignoring Poor Air Quality (5+ Years)
+<h3>🚨 Long-term Consequences of Ignoring Poor Air Quality (5+ Years)</h3>
 Ignoring poor air quality can lead to serious consequences over time. Here’s what could happen if precautions are not taken:
 
-- **Health Impacts**:  
-  - **Chronic Respiratory Diseases**: Prolonged exposure to PM2.5, PM10, and NO2 can cause chronic obstructive pulmonary disease (COPD), asthma, and reduced lung function.  
-  - **Cardiovascular Problems**: Pollutants entering the bloodstream increase the risk of heart attacks, strokes, and hypertension.  
-  - **Cancer Risk**: Long-term exposure to PM2.5 is linked to lung cancer and other respiratory cancers.  
-  - **Neurological Effects**: Emerging studies suggest air pollution may contribute to cognitive decline, dementia, and developmental issues in children.  
-  - **Reduced Life Expectancy**: High AQI levels can shorten life expectancy by several years in heavily polluted areas.  
+- <b>Health Impacts</b>:  
+  - <b>Chronic Respiratory Diseases</b>: Prolonged exposure to PM2.5, PM10, and NO2 can cause chronic obstructive pulmonary disease (COPD), asthma, and reduced lung function.  
+  - <b>Cardiovascular Problems</b>: Pollutants entering the bloodstream increase the risk of heart attacks, strokes, and hypertension.  
+  - <b>Cancer Risk</b>: Long-term exposure to PM2.5 is linked to lung cancer and other respiratory cancers.  
+  - <b>Neurological Effects</b>: Emerging studies suggest air pollution may contribute to cognitive decline, dementia, and developmental issues in children.  
+  - <b>Reduced Life Expectancy</b>: High AQI levels can shorten life expectancy by several years in heavily polluted areas.  
 
-- **Environmental Impacts**:  
-  - **Worsening Air Quality**: Without action, pollution levels will rise, leading to more frequent "Severe" AQI days.  
-  - **Ecosystem Damage**: Pollutants like ozone harm vegetation, reducing crop yields and threatening food security.  
-  - **Climate Feedback Loops**: Increased pollution worsens climate change, which exacerbates air quality issues through higher temperatures and stagnant air.  
+- <b>Environmental Impacts</b>:  
+  - <b>Worsening Air Quality</b>: Without action, pollution levels will rise, leading to more frequent "Severe" AQI days.  
+  - <b>Ecosystem Damage</b>: Pollutants like ozone harm vegetation, reducing crop yields and threatening food security.  
+  - <b>Climate Feedback Loops</b>: Increased pollution worsens climate change, which exacerbates air quality issues through higher temperatures and stagnant air.  
 
-- **Societal Impacts**:  
-  - **Economic Costs**: Rising healthcare costs from pollution-related illnesses and lost productivity due to sick days.  
-  - **Reduced Quality of Life**: Persistent poor air quality limits outdoor activities, impacting physical and mental well-being.  
+- <b>Societal Impacts</b>:  
+  - <b>Economic Costs</b>: Rising healthcare costs from pollution-related illnesses and lost productivity due to sick days.  
+  - <b>Reduced Quality of Life</b>: Persistent poor air quality limits outdoor activities, impacting physical and mental well-being.  
 
-**Take Action Now**: Support clean energy policies, use public transport, reduce personal emissions, and advocate for green spaces to improve air quality and prevent these long-term consequences.
+<b>Take Action Now</b>: Support clean energy policies, use public transport, reduce personal emissions, and advocate for green spaces to improve air quality and prevent these long-term consequences.
 """
 
 # Function to get AQI category based on numerical AQI value
@@ -237,13 +237,13 @@ with st.sidebar:
     if st.button("Info about AQI"):
         st.header("Information about AQI and Parameters")
         st.markdown("""
-            **Air Quality Index (AQI)** is a measure used to communicate how polluted the air currently is or how polluted it is forecast to become. AQI values are calculated based on the levels of key pollutants. Here’s an overview of the parameters used for prediction:
+            Air Quality Index (AQI) is a measure used to communicate how polluted the air currently is or how polluted it is forecast to become. AQI values are calculated based on the levels of key pollutants. Here’s an overview of the parameters used for prediction:
 
-            - **PM2.5 (Particulate Matter 2.5)**: Fine particles with a diameter of 2.5 micrometers or less. These can penetrate deep into the lungs and even enter the bloodstream, posing significant health risks.
-            - **PM10 (Particulate Matter 10)**: Coarser particles with a diameter of 10 micrometers or less. These can irritate the airways and lungs, especially in sensitive individuals.
-            - **NO2 (Nitrogen Dioxide)**: A gas produced by vehicle exhausts and industrial emissions. It can cause respiratory issues and contribute to the formation of smog.
-            - **CO (Carbon Monoxide)**: A colorless, odorless gas from incomplete combustion. High levels can lead to reduced oxygen delivery to the body’s organs and tissues.
-            - **O3 (Ozone)**: A gas formed by chemical reactions between oxides of nitrogen and volatile organic compounds. Ground-level ozone can cause breathing problems and damage lung tissue.
+            - PM2.5 (Particulate Matter 2.5): Fine particles with a diameter of 2.5 micrometers or less. These can penetrate deep into the lungs and even enter the bloodstream, posing significant health risks.
+            - PM10 (Particulate Matter 10): Coarser particles with a diameter of 10 micrometers or less. These can irritate the airways and lungs, especially in sensitive individuals.
+            - NO2 (Nitrogen Dioxide): A gas produced by vehicle exhausts and industrial emissions. It can cause respiratory issues and contribute to the formation of smog.
+            - CO (Carbon Monoxide): A colorless, odorless gas from incomplete combustion. High levels can lead to reduced oxygen delivery to the body’s organs and tissues.
+            - O3 (Ozone): A gas formed by chemical reactions between oxides of nitrogen and volatile organic compounds. Ground-level ozone can cause breathing problems and damage lung tissue.
 
             These parameters are measured in units like µg/m³ (micrograms per cubic meter) or mg/m³ (milligrams per cubic meter) and are combined using a standardized formula to compute the AQI, which ranges from 0 (good) to 500 (hazardous).
         """)
@@ -319,10 +319,10 @@ elif page == "🔮 Predict AQI":
                 st.markdown(f"<span class='{get_aqi_category_class(aqi_category)}'>Air Quality Category: <b>{aqi_category}</b></span>", unsafe_allow_html=True)
                 st.balloons()
                 # AQI Assistant response
-                st.markdown("### AQI Assistant")
+                st.markdown("<h3>AQI Assistant</h3>", unsafe_allow_html=True)
                 st.markdown(f"<div class='chatbot-message'>{aqi_recommendations.get(aqi_category, 'No recommendations available.')}</div>", unsafe_allow_html=True)
                 # Long-term consequences
-                st.markdown(long_term_consequences)
+                st.markdown(long_term_consequences, unsafe_allow_html=True)
 
 # ---------------------------------------------
 # 🆚 Page 3: Compare Two Cities
@@ -416,10 +416,10 @@ elif page == "🚨 Live AQI Alerts":
                 st.markdown(f"<div class='alert-high-aqi'>⚠️ High AQI Alert: Take precautions as air quality is {aqi_category.lower()}!</div>", unsafe_allow_html=True)
             
             # AQI Assistant Recommendations
-            st.markdown("### AQI Assistant")
+            st.markdown("<h3>AQI Assistant</h3>", unsafe_allow_html=True)
             st.markdown(f"<div class='chatbot-message'>{aqi_recommendations.get(aqi_category, 'No recommendations available.')}</div>", unsafe_allow_html=True)
             
             # Long-term consequences
-            st.markdown(long_term_consequences)
+            st.markdown(long_term_consequences, unsafe_allow_html=True)
         else:
             st.error(f"Unable to fetch live AQI data for {city}. Please try another city or check your connection.")
