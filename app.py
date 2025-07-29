@@ -94,12 +94,7 @@ def load_data():
     df['Date'] = pd.to_datetime(df['Date'])
     df['Month'] = df['Date'].dt.strftime('%b')  # Extract month abbreviation
     df = df.dropna(subset=['PM2.5', 'PM10', 'NO2', 'CO', 'O3', 'AQI'])
-    jk_cities = [
-        'Jammu', 'Srinagar', 'Rajouri', 'Rajoa', 'Kohlina', 'Jabah', 'Sundarbani',
-        'Anantnag', 'Baramulla', 'Budgam', 'Kathua', 'Pampore', 'Pulwama', 'Udhampur'
-    ]
-    dataset_cities = sorted(df['City'].unique())
-    all_cities = sorted(list(set(dataset_cities + jk_cities)))
+    all_cities = sorted(df['City'].unique())
     return df, all_cities
 
 def get_live_aqi(city_name):
@@ -162,60 +157,312 @@ model = load_model()
 df, all_cities = load_data()
 
 aqi_recommendations = {
-    'Good': """
-        <b>Health</b>: Air quality is excellent, posing no health risks for anyone.  
-        <b>Actions</b>: Enjoy outdoor activities like jogging, cycling, or family picnics without restrictions.  
-        <b>Tips</b>:  
-        - Take advantage of clean air to boost your physical and mental health through outdoor exercise.  
-        - Open windows to naturally ventilate your home and improve indoor air quality.  
-        - Support community initiatives like tree planting to maintain good air quality.  
-        <b>Pro Tip</b>: Use this opportunity to promote eco-friendly habits, such as cycling or walking instead of driving, to keep the air clean!
-    """,
-    'Satisfactory': """
-        <b>Health</b>: Air quality is acceptable, but sensitive groups (e.g., those with asthma or allergies) may experience mild discomfort.  
-        <b>Actions</b>: Sensitive individuals should limit prolonged outdoor exertion, especially during midday when pollution peaks.  
-        <b>Tips</b>:  
-        - Use air purifiers with HEPA filters to keep indoor air clean and safe.  
-        - Wear a mask (e.g., N95) if spending extended time outdoors.  
-        - Stay updated with real-time air quality apps to plan outdoor activities.  
-        <b>Pro Tip</b>: Incorporate air-purifying plants like peace lilies or snake plants indoors to enhance air quality naturally!
-    """,
-    'Moderate': """
-        <b>Health</b>: Sensitive groups (e.g., children, elderly, or those with respiratory conditions) may experience health effects; the general public is less affected.  
-        <b>Actions</b>: Sensitive groups should avoid strenuous outdoor activities; others should reduce prolonged exposure.  
-        <b>Tips</b>:  
-        - Wear N95 masks during outdoor activities to minimize pollutant inhalation.  
-        - Schedule outdoor time for early morning or evening when pollution levels are typically lower.  
-        - Use air quality monitoring apps to stay informed about real-time AQI changes.  
-        <b>Pro Tip</b>: Invest in a high-quality air purifier for your home to create a safe indoor environment!
-    """,
-    'Poor': """
-        <b>Health</b>: Everyone may experience health effects, with sensitive groups facing severe symptoms like coughing or breathing difficulties.  
-        <b>Actions</b>: Avoid all outdoor activities, especially strenuous ones, and stay indoors with air purifiers running.  
-        <b>Tips</b>:  
-        - Seal windows and doors to block polluted air from entering your home.  
-        - Use air purifiers with both HEPA and activated carbon filters for maximum pollutant removal.  
-        - Stay hydrated and avoid indoor pollutant sources like incense or candles.  
-        <b>Pro Tip</b>: Advocate for cleaner air by supporting local policies for reduced emissions, such as promoting public transport or green energy!
-    """,
-    'Very Poor': """
-        <b>Health</b>: Serious health risks for everyone, including worsened respiratory and cardiovascular issues, even in healthy individuals.  
-        <b>Actions</b>: Stay indoors at all times, avoiding any outdoor exposure, and keep air purifiers running continuously.  
-        <b>Tips</b>:  
-        - Monitor for symptoms like shortness of breath or chest pain and seek medical advice if needed.  
-        - Use a humidifier to ease respiratory discomfort caused by dry air.  
-        - Avoid indoor activities that generate pollutants, such as smoking or burning candles.  
-        <b>Pro Tip</b>: Join community efforts to reduce pollution, like campaigns against vehicle idling or industrial emissions, to protect future air quality!
-    """,
-    'Severe': """
-        <b>Health</b>: Emergency conditions with significant health risks for all, including severe respiratory and heart issues.  
-        <b>Actions</b>: Remain indoors with all windows and doors sealed, avoiding any physical activity, indoors or out.  
-        <b>Tips</b>:  
-        - Use medical-grade air purifiers to ensure safe indoor air quality.  
-        - Seek immediate medical help if you experience breathing difficulties or heart palpitations.  
-        - Avoid cooking methods that produce smoke, like frying, to minimize indoor pollutants.  
-        <b>Pro Tip</b>: Become an advocate for stricter air quality regulations to prevent severe AQI events and protect public health!
-    """
+    'Good': {
+        'General': """
+            <b>Health</b>: Air quality is excellent, posing no health risks for anyone.  
+            <b>Actions</b>: Enjoy outdoor activities like jogging, cycling, or family picnics without restrictions.  
+            <b>Tips</b>:  
+            - Take advantage of clean air to boost physical and mental health through outdoor exercise.  
+            - Open windows to naturally ventilate your home and improve indoor air quality.  
+            - Support community initiatives like tree planting to maintain good air quality.  
+            <b>Pro Tip</b>: Use this opportunity to promote eco-friendly habits, such as cycling or walking instead of driving, to keep the air clean!
+        """,
+        'Asthma': """
+            <b>For Asthma Patients</b>: The air is safe for you today! Enjoy outdoor activities, but keep your inhaler handy as a precaution.  
+            <b>Tips</b>:  
+            - Engage in light exercise like walking to improve lung capacity, but avoid overexertion.  
+            - Ensure your home is dust-free to complement the clean outdoor air.  
+            - Monitor pollen levels, as they can still trigger symptoms even in good AQI conditions.  
+            <b>Pro Tip</b>: Practice breathing exercises like diaphragmatic breathing to strengthen respiratory health.
+        """,
+        'Heart Disease': """
+            <b>For Heart Disease Patients</b>: The clean air is ideal for light outdoor activities to support heart health.  
+            <b>Tips</b>:  
+            - Try gentle activities like walking or yoga to improve circulation without straining your heart.  
+            - Stay hydrated and avoid extreme temperatures, even with good air quality.  
+            - Keep medications accessible in case of unexpected symptoms.  
+            <b>Pro Tip</b>: Join a community walking group to stay motivated and socially connected while staying active.
+        """,
+        'Elderly': """
+            <b>For the Elderly</b>: The air quality is perfect for enjoying outdoor time safely.  
+            <b>Tips</b>:  
+            - Take short walks or engage in light gardening to stay active and boost mood.  
+            - Ensure good hydration and rest to maintain energy levels.  
+            - Avoid crowded areas to reduce exposure to minor pollutants or allergens.  
+            <b>Pro Tip</b>: Spend time in green spaces like parks to enhance mental well-being.
+        """,
+        'Children': """
+            <b>For Children</b>: Great air quality for kids to play outside and stay active!  
+            <b>Tips</b>:  
+            - Encourage outdoor games like tag or soccer to promote physical development.  
+            - Ensure kids stay hydrated and take breaks to avoid fatigue.  
+            - Apply sunscreen and monitor for allergens like pollen that may still be present.  
+            <b>Pro Tip</b>: Organize outdoor playdates to foster social skills in a healthy environment.
+        """,
+        'Pregnancy': """
+            <b>For Pregnant Individuals</b>: The air is safe for you and your baby to enjoy outdoor activities.  
+            <b>Tips</b>:  
+            - Take gentle walks to support circulation and reduce pregnancy-related discomfort.  
+            - Avoid overexertion and stay hydrated to maintain energy levels.  
+            - Monitor for any unusual symptoms and consult your doctor if needed.  
+            <b>Pro Tip</b>: Practice prenatal yoga outdoors to combine fresh air with relaxation.
+        """
+    },
+    'Satisfactory': {
+        'General': """
+            <b>Health</b>: Air quality is acceptable, but sensitive groups may experience mild discomfort.  
+            <b>Actions</b>: Sensitive individuals should limit prolonged outdoor exertion, especially during midday when pollution peaks.  
+            <b>Tips</b>:  
+            - Use air purifiers with HEPA filters to keep indoor air clean.  
+            - Wear a mask (e.g., N95) if spending extended time outdoors.  
+            - Stay updated with real-time air quality apps to plan outdoor activities.  
+            <b>Pro Tip</b>: Incorporate air-purifying plants like peace lilies or snake plants indoors to enhance air quality naturally!
+        """,
+        'Asthma': """
+            <b>For Asthma Patients</b>: Be cautious, as mild pollutants may trigger symptoms.  
+            <b>Tips</b>:  
+            - Limit outdoor time to early morning or evening when pollution is lower.  
+            - Use your inhaler proactively before any outdoor activity.  
+            - Keep windows closed and use an air purifier to reduce indoor irritants.  
+            <b>Pro Tip</b>: Avoid areas with heavy traffic to minimize exposure to vehicle emissions.
+        """,
+        'Heart Disease': """
+            <b>For Heart Disease Patients</b>: Mild air pollution may stress your cardiovascular system.  
+            <b>Tips</b>:  
+            - Avoid strenuous outdoor activities; opt for indoor exercises like stretching.  
+            - Monitor heart rate and blood pressure, and keep medications nearby.  
+            - Use a HEPA air purifier at home to maintain clean indoor air.  
+            <b>Pro Tip</b>: Practice stress-relief techniques like meditation to support heart health in suboptimal air conditions.
+        """,
+        'Elderly': """
+            <b>For the Elderly</b>: Air quality may cause minor discomfort, especially with prolonged exposure.  
+            <b>Tips</b>:  
+            - Limit outdoor activities to short durations and avoid peak pollution hours.  
+            - Stay indoors with good ventilation and use air purifiers.  
+            - Monitor for fatigue or respiratory discomfort and rest as needed.  
+            <b>Pro Tip</b>: Engage in indoor hobbies like reading or puzzles to stay active without exposure.
+        """,
+        'Children': """
+            <b>For Children</b>: Kids can play outside, but limit intense activities to avoid irritation.  
+            <b>Tips</b>:  
+            - Schedule outdoor play in the early morning or late afternoon.  
+            - Ensure kids wear masks during high-energy activities to reduce pollutant inhalation.  
+            - Keep indoor spaces clean and free of dust or allergens.  
+            <b>Pro Tip</b>: Encourage indoor activities like board games on days with higher pollution.
+        """,
+        'Pregnancy': """
+            <b>For Pregnant Individuals</b>: Air quality is mostly safe but may cause mild discomfort.  
+            <b>Tips</b>:  
+            - Avoid long outdoor walks, especially near busy roads or industrial areas.  
+            - Use a HEPA air purifier at home to ensure clean indoor air.  
+            - Stay hydrated and rest frequently to support your health.  
+            <b>Pro Tip</b>: Practice indoor prenatal exercises to stay active safely.
+        """
+    },
+    'Moderate': {
+        'General': """
+            <b>Health</b>: Sensitive groups may experience health effects; the general public is less affected.  
+            <b>Actions</b>: Sensitive groups should avoid strenuous outdoor activities; others should reduce prolonged exposure.  
+            <b>Tips</b>:  
+            - Wear N95 masks during outdoor activities to minimize pollutant inhalation.  
+            - Schedule outdoor time for early morning or evening when pollution levels are lower.  
+            - Use air quality monitoring apps to stay informed about real-time AQI changes.  
+            <b>Pro Tip</b>: Invest in a high-quality air purifier for your home to create a safe indoor environment!
+        """,
+        'Asthma': """
+            <b>For Asthma Patients</b>: Moderate air quality increases the risk of asthma attacks.  
+            <b>Tips</b>:  
+            - Avoid outdoor exercise; use indoor alternatives like treadmill walking.  
+            - Keep rescue inhalers accessible and use as prescribed before any exposure.  
+            - Use a HEPA air purifier and keep windows closed to reduce indoor pollutants.  
+            <b>Pro Tip</b>: Track your symptoms daily and consult your doctor if you notice increased wheezing or shortness of breath.
+        """,
+        'Heart Disease': """
+            <b>For Heart Disease Patients</b>: Pollutants may strain your heart, increasing symptom risk.  
+            <b>Tips</b>:  
+            - Stay indoors and avoid physical exertion to prevent cardiovascular stress.  
+            - Monitor for symptoms like chest pain or palpitations and seek medical help if needed.  
+            - Use air purifiers with activated carbon filters to remove gases like NO2.  
+            <b>Pro Tip</b>: Maintain a heart-healthy diet rich in antioxidants to counter pollutant effects.
+        """,
+        'Elderly': """
+            <b>For the Elderly</b>: Increased risk of respiratory and cardiovascular issues in moderate air quality.  
+            <b>Tips</b>:  
+            - Stay indoors during peak pollution hours (midday) and use air purifiers.  
+            - Monitor for symptoms like shortness of breath or fatigue and rest as needed.  
+            - Keep medications handy and consult a doctor if symptoms worsen.  
+            <b>Pro Tip</b>: Stay hydrated and practice gentle indoor exercises like chair yoga to maintain mobility.
+        """,
+        'Children': """
+            <b>For Children</b>: Moderate air quality may affect developing lungs.  
+            <b>Tips</b>:  
+            - Limit outdoor playtime and avoid high-energy activities like running.  
+            - Ensure kids wear N95 masks if they must go outside.  
+            - Use air purifiers in bedrooms and play areas to maintain clean air.  
+            <b>Pro Tip</b>: Engage kids in educational indoor activities like science kits to keep them occupied safely.
+        """,
+        'Pregnancy': """
+            <b>For Pregnant Individuals</b>: Moderate pollution may pose risks to you and your baby.  
+            <b>Tips</b>:  
+            - Avoid outdoor activities, especially in areas with heavy traffic or industry.  
+            - Use a medical-grade air purifier to ensure clean indoor air.  
+            - Monitor for symptoms like fatigue or respiratory discomfort and consult your doctor.  
+            <b>Pro Tip</b>: Rest in well-ventilated, clean indoor spaces to support a healthy pregnancy.
+        """
+    },
+    'Poor': {
+        'General': """
+            <b>Health</b>: Everyone may experience health effects, with sensitive groups facing severe symptoms.  
+            <b>Actions</b>: Avoid all outdoor activities and stay indoors with air purifiers running.  
+            <b>Tips</b>:  
+            - Seal windows and doors to block polluted air from entering your home.  
+            - Use air purifiers with both HEPA and activated carbon filters for maximum pollutant removal.  
+            - Stay hydrated and avoid indoor pollutant sources like incense or candles.  
+            <b>Pro Tip</b>: Advocate for cleaner air by supporting local policies for reduced emissions!
+        """,
+        'Asthma': """
+            <b>For Asthma Patients</b>: Poor air quality significantly increases the risk of severe asthma attacks.  
+            <b>Tips</b>:  
+            - Stay indoors and avoid any outdoor exposure, even for short periods.  
+            - Use a nebulizer or rescue inhaler as prescribed and keep it accessible.  
+            - Run a medical-grade air purifier continuously to minimize indoor pollutants.  
+            <b>Pro Tip</b>: Contact your doctor immediately if you experience frequent symptoms or worsening attacks.
+        """,
+        'Heart Disease': """
+            <b>For Heart Disease Patients</b>: Poor air quality can trigger serious cardiovascular events.  
+            <b>Tips</b>:  
+            - Remain indoors with sealed windows and use a high-quality air purifier.  
+            - Monitor heart rate and blood pressure closely; seek medical help for any chest pain.  
+            - Avoid stress or physical exertion to reduce strain on your heart.  
+            <b>Pro Tip</b>: Keep emergency contacts and medications readily available in case of sudden symptoms.
+        """,
+        'Elderly': """
+            <b>For the Elderly</b>: Poor air quality poses a high risk of respiratory and heart issues.  
+            <b>Tips</b>:  
+            - Stay indoors with air purifiers running and avoid any physical activity.  
+            - Monitor for symptoms like coughing, dizziness, or chest tightness; seek medical advice if needed.  
+            - Ensure a comfortable, clean indoor environment with proper humidity.  
+            <b>Pro Tip</b>: Use telehealth services to consult doctors without leaving home.
+        """,
+        'Children': """
+            <b>For Children</b>: Poor air quality can harm developing lungs and overall health.  
+            <b>Tips</b>:  
+            - Keep children indoors and use air purifiers in living and sleeping areas.  
+            - Avoid activities that increase breathing rates, even indoors.  
+            - Monitor for coughing or wheezing and consult a pediatrician if symptoms appear.  
+            <b>Pro Tip</b>: Create a clean, fun indoor environment with games or crafts to keep kids engaged.
+        """,
+        'Pregnancy': """
+            <b>For Pregnant Individuals</b>: Poor air quality may affect fetal development and maternal health.  
+            <b>Tips</b>:  
+            - Stay indoors with sealed windows and use a medical-grade air purifier.  
+            - Avoid any physical exertion and monitor for symptoms like shortness of breath.  
+            - Consult your obstetrician if you feel unwell or notice reduced fetal movement.  
+            <b>Pro Tip</b>: Rest in a calm, clean indoor space to support a healthy pregnancy.
+        """
+    },
+    'Very Poor': {
+        'General': """
+            <b>Health</b>: Serious health risks for everyone, including worsened respiratory and cardiovascular issues.  
+            <b>Actions</b>: Stay indoors at all times, avoiding any outdoor exposure, and keep air purifiers running continuously.  
+            <b>Tips</b>:  
+            - Monitor for symptoms like shortness of breath or chest pain and seek medical advice if needed.  
+            - Use a humidifier to ease respiratory discomfort caused by dry air.  
+            - Avoid indoor activities that generate pollutants, such as smoking or burning candles.  
+            <b>Pro Tip</b>: Join community efforts to reduce pollution, like campaigns against vehicle idling!
+        """,
+        'Asthma': """
+            <b>For Asthma Patients</b>: Very poor air quality can trigger life-threatening asthma attacks.  
+            <b>Tips</b>:  
+            - Remain indoors with a medical-grade air purifier running at all times.  
+            - Use preventive medications and keep emergency inhalers or nebulizers ready.  
+            - Avoid any indoor irritants like dust, pet dander, or strong cleaning products.  
+            <b>Pro Tip</b>: Have an asthma action plan and emergency contacts ready for immediate response.
+        """,
+        'Heart Disease': """
+            <b>For Heart Disease Patients</b>: Very poor air quality significantly increases the risk of heart attacks or arrhythmias.  
+            <b>Tips</b>:  
+            - Stay indoors with sealed windows and use air purifiers with HEPA and carbon filters.  
+            - Avoid any physical or emotional stress; monitor for chest pain or irregular heartbeats.  
+            - Keep emergency medications like nitroglycerin accessible and contact a doctor if symptoms arise.  
+            <b>Pro Tip</b>: Use a pulse oximeter to monitor oxygen levels and heart rate at home.
+        """,
+        'Elderly': """
+            <b>For the Elderly</b>: Very poor air quality poses severe risks to respiratory and cardiovascular health.  
+            <b>Tips</b>:  
+            - Stay indoors with air purifiers and avoid any physical activity, even indoors.  
+            - Monitor for symptoms like confusion, shortness of breath, or chest pain; seek immediate help if needed.  
+            - Maintain proper hydration and a comfortable indoor temperature.  
+            <b>Pro Tip</b>: Arrange for regular check-ins with family or caregivers during high-pollution days.
+        """,
+        'Children': """
+            <b>For Children</b>: Very poor air quality can cause serious harm to developing lungs and immune systems.  
+            <b>Tips</b>:  
+            - Keep children indoors with air purifiers running in all living spaces.  
+            - Avoid any physical activities that increase breathing rates.  
+            - Watch for signs of respiratory distress and consult a pediatrician immediately if noticed.  
+            <b>Pro Tip</b>: Use engaging indoor activities like storytelling or educational apps to keep kids calm and safe.
+        """,
+        'Pregnancy': """
+            <b>For Pregnant Individuals</b>: Very poor air quality poses significant risks to both maternal and fetal health.  
+            <b>Tips</b>:  
+            - Stay indoors with medical-grade air purifiers and sealed windows to avoid pollutant exposure.  
+            - Monitor for symptoms like dizziness or reduced fetal movement and contact your doctor immediately.  
+            - Rest frequently and avoid any stress or exertion.  
+            <b>Pro Tip</b>: Use a fetal heart monitor at home if recommended by your doctor to ensure baby’s well-being.
+        """
+    },
+    'Severe': {
+        'General': """
+            <b>Health</b>: Emergency conditions with significant health risks for all, including severe respiratory and heart issues.  
+            <b>Actions</b>: Remain indoors with all windows and doors sealed, avoiding any physical activity.  
+            <b>Tips</b>:  
+            - Use medical-grade air purifiers to ensure safe indoor air quality.  
+            - Seek immediate medical help if you experience breathing difficulties or heart palpitations.  
+            - Avoid cooking methods that produce smoke, like frying, to minimize indoor pollutants.  
+            <b>Pro Tip</b>: Become an advocate for stricter air quality regulations to prevent severe AQI events!
+        """,
+        'Asthma': """
+            <b>For Asthma Patients</b>: Severe air quality can lead to critical asthma emergencies.  
+            <b>Tips</b>:  
+            - Stay indoors with sealed windows and run medical-grade air purifiers continuously.  
+            - Follow your asthma action plan strictly and keep emergency medications ready.  
+            - Seek immediate medical attention for severe symptoms like inability to speak or severe wheezing.  
+            <b>Pro Tip</b>: Ensure a family member or caregiver is aware of your condition and can assist in emergencies.
+        """,
+        'Heart Disease': """
+            <b>For Heart Disease Patients</b>: Severe air quality can trigger life-threatening cardiovascular events.  
+            <b>Tips</b>:  
+            - Remain indoors with air purifiers and avoid any physical or emotional stress.  
+            - Monitor for symptoms like chest pain, shortness of breath, or irregular heartbeats; seek emergency care if needed.  
+            - Keep all medications accessible and ensure a calm indoor environment.  
+            <b>Pro Tip</b>: Have a hospital emergency plan ready, including transport options, for immediate response.
+        """,
+        'Elderly': """
+            <b>For the Elderly</b>: Severe air quality poses extreme risks, potentially leading to critical health events.  
+            <b>Tips</b>:  
+            - Stay indoors with air purifiers running and avoid any activity, even light movement.  
+            - Monitor for severe symptoms like confusion, chest pain, or breathing difficulties; seek emergency care immediately.  
+            - Ensure caregivers or family check in regularly.  
+            <b>Pro Tip</b>: Keep a medical alert device or phone nearby for quick access to emergency services.
+        """,
+        'Children': """
+            <b>For Children</b>: Severe air quality can cause acute respiratory distress and long-term health impacts.  
+            <b>Tips</b>:  
+            - Keep children indoors with medical-grade air purifiers in all rooms.  
+            - Monitor for signs of respiratory distress, lethargy, or coughing; contact a pediatrician immediately if symptoms appear.  
+            - Avoid any physical activities and maintain a calm indoor environment.  
+            <b>Pro Tip</b>: Use comforting activities like reading or watching movies to keep children calm and distracted.
+        """,
+        'Pregnancy': """
+            <b>For Pregnant Individuals</b>: Severe air quality can seriously harm maternal and fetal health.  
+            <b>Tips</b>:  
+            - Stay indoors with medical-grade air purifiers and sealed windows to block all pollutants.  
+            - Monitor for symptoms like severe fatigue, dizziness, or reduced fetal movement; seek emergency care if needed.  
+            - Rest as much as possible and avoid any stress or exertion.  
+            <b>Pro Tip</b>: Keep your obstetrician’s contact information handy and use telehealth for immediate consultations.
+        """
+    }
 }
 
 long_term_consequences = """
@@ -311,7 +558,6 @@ if page == "📊 City-wise AQI":
     if not city_df.empty:
         with st.spinner("Loading AQI trend..."):
             fig, ax = plt.subplots(figsize=(10, 4))
-            # Aggregate AQI by month for the selected city
             monthly_aqi = city_df.groupby('Month')['AQI'].mean().reindex(
                 ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
             )
@@ -371,7 +617,7 @@ elif page == "🔮 Predict AQI":
                 st.markdown(f"<span class='{get_aqi_category_class(aqi_category)}'>Air Quality Category: <b>{aqi_category}</b></span>", unsafe_allow_html=True)
                 st.balloons()
                 st.markdown("<h3>AQI Assistant</h3>", unsafe_allow_html=True)
-                st.markdown(f"<div class='chatbot-message'>{aqi_recommendations.get(aqi_category, 'No recommendations available.')}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='chatbot-message'>{aqi_recommendations.get(aqi_category, {}).get('General', 'No recommendations available.')}</div>", unsafe_allow_html=True)
                 st.markdown(long_term_consequences, unsafe_allow_html=True)
 
 elif page == "🆚 Compare Cities":
@@ -392,7 +638,6 @@ elif page == "🆚 Compare Cities":
         if not city1_df.empty:
             with st.spinner(f"Loading {city1} data..."):
                 fig, ax = plt.subplots(figsize=(8, 3.5))
-                # Aggregate AQI by month for city1
                 monthly_aqi = city1_df.groupby('Month')['AQI'].mean().reindex(
                     ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                 )
@@ -411,7 +656,6 @@ elif page == "🆚 Compare Cities":
         if not city2_df.empty:
             with st.spinner(f"Loading {city2} data..."):
                 fig, ax = plt.subplots(figsize=(8, 3.5))
-                # Aggregate AQI by month for city2
                 monthly_aqi = city2_df.groupby('Month')['AQI'].mean().reindex(
                     ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                 )
@@ -488,7 +732,7 @@ elif page == "🚨 Live AQI Alerts":
                 st.markdown(f"<div class='alert-high-aqi'>⚠️ High AQI Alert: Take precautions as air quality is {aqi_category.lower()}!</div>", unsafe_allow_html=True)
             
             st.markdown("<h3>AQI Assistant</h3>", unsafe_allow_html=True)
-            st.markdown(f"<div class='chatbot-message'>{aqi_recommendations.get(aqi_category, 'No recommendations available.')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='chatbot-message'>{aqi_recommendations.get(aqi_category, {}).get('General', 'No recommendations available.')}</div>", unsafe_allow_html=True)
             
             st.markdown(long_term_consequences, unsafe_allow_html=True)
         else:
@@ -523,10 +767,16 @@ elif page == "🌱 AQI Assistant":
 
     st.subheader("Personalized Health Recommendations")
     aqi_category = get_aqi_category(current_aqi)
-    recommendation = aqi_recommendations.get(aqi_category, "No recommendations available.")
-    if "None" not in health_conditions:
-        recommendation += "<br><b>Special Note</b>: Due to your health conditions ({}), take extra precautions such as using a medical-grade air purifier and consulting a doctor if symptoms worsen.".format(", ".join(health_conditions))
+    if "None" in health_conditions:
+        recommendation = aqi_recommendations.get(aqi_category, {}).get('General', "No recommendations available.")
+    else:
+        recommendation = f"<b>General Advice for {aqi_category} AQI</b>:<br>{aqi_recommendations.get(aqi_category, {}).get('General', 'No general recommendations available.')}<br><br>"
+        recommendation += f"<b>Personalized Advice for Your Health Conditions ({', '.join(health_conditions)})</b>:<br>"
+        for condition in health_conditions:
+            condition_recommendation = aqi_recommendations.get(aqi_category, {}).get(condition, f"No specific recommendations for {condition}.")
+            recommendation += f"{condition_recommendation}<br><br>"
     st.markdown(f"<div class='chatbot-message'>{recommendation}</div>", unsafe_allow_html=True)
+    st.markdown(long_term_consequences, unsafe_allow_html=True)
 
     if action != "None":
         st.subheader(f"Impact of {action}")
@@ -572,11 +822,3 @@ elif page == "🌱 AQI Assistant":
             ax.set_ylabel('AQI')
             plt.tight_layout()
             st.pyplot(fig)
-
-    if city in ['Jammu', 'Srinagar', 'Rajouri', 'Rajoa', 'Kohlina', 'Jabah', 'Sundarbani', 'Anantnag', 'Baramulla', 'Budgam', 'Kathua', 'Pampore', 'Pulwama', 'Udhampur']:
-        st.markdown("""
-            <div class='assistant-response'>
-            <b>Jammu and Kashmir Pollution Insights</b><br>
-            Air pollution in Jammu and Kashmir is driven by vehicular emissions, biomass burning, and industrial activities like brick kilns. Rajouri, for example, has high PM2.5 levels (often >100 µg/m³), posing health risks. Actions like promoting electric vehicles and afforestation can significantly improve air quality in these regions.
-            </div>
-        """, unsafe_allow_html=True)
