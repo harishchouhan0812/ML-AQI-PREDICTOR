@@ -527,7 +527,7 @@ elif page == "🌱 AQI Assistant":
                 - New AQI: {impact['new_aqi']:.2f} ({impact['category']})<br>
                 - PM2.5 Reduction: {impact['pm25_reduction']:.2f} µg/m³<br>
                 - CO2 Reduction: {impact['co2_reduction']:.2f} metric tons/year<br>
-                <b>Context</b>: Trees absorb PM2.5 and CO2, improving air quality over time. In Jammu and Kashmir, planting native species like pine or cedar can enhance local ecosystems.
+                <b>Context</b>: Trees absorb PM2.5 and CO2, improving air quality over time. Planting native species like pine or cedar can enhance local ecosystems.
                 </div>
             """, unsafe_allow_html=True)
             
