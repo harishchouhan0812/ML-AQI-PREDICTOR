@@ -4,6 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 import time
+import requests
 from io import StringIO
 
 # Set page configuration with a custom theme
@@ -62,6 +63,14 @@ st.markdown("""
         font-family: 'Arial', sans-serif;
         color: #2c3e50 !important;
     }
+    .alert-high-aqi {
+        background-color: #ff0000;
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -80,42 +89,104 @@ def load_data():
     df = df.dropna(subset=['PM2.5', 'PM10', 'NO2', 'CO', 'O3', 'AQI'])
     return df
 
+# Function to fetch live AQI data
+def get_live_aqi(city_name):
+    url = f"https://api.waqi.info/feed/{city_name}/?token=fe0547e431226e44d33b4d50af849d737783f9de"
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if data["status"] == "ok":
+            aqi = data["data"]["aqi"]
+            return aqi
+        else:
+            return None
+    except:
+        return None
+
 model = load_model()
 df = load_data()
 
-# AQI Recommendations Dictionary
+# Enhanced AQI Recommendations Dictionary
 aqi_recommendations = {
     'Good': """
-        Health: Air quality is satisfactory, and air pollution poses little or no risk.
-        Actions: Enjoy outdoor activities without restrictions.
-        Tips: Continue monitoring air quality for any unexpected changes.
+        **Health**: Air quality is excellent, posing no health risks for anyone.  
+        **Actions**: Enjoy outdoor activities like jogging, cycling, or family picnics without restrictions.  
+        **Tips**:  
+        - Take advantage of clean air to boost your physical and mental health through outdoor exercise.  
+        - Open windows to naturally ventilate your home and improve indoor air quality.  
+        - Support community initiatives like tree planting to maintain good air quality.  
+        **Pro Tip**: Use this opportunity to promote eco-friendly habits, such as cycling or walking instead of driving, to keep the air clean!
     """,
     'Satisfactory': """
-        Health: Air quality is acceptable; however, some pollutants may affect sensitive individuals.
-        Actions: Sensitive groups (e.g., those with respiratory issues) should reduce prolonged outdoor exertion.
-        Tips: Use air purifiers indoors and keep windows closed during peak pollution hours.
+        **Health**: Air quality is acceptable, but sensitive groups (e.g., those with asthma or allergies) may experience mild discomfort.  
+        **Actions**: Sensitive individuals should limit prolonged outdoor exertion, especially during midday when pollution peaks.  
+        **Tips**:  
+        - Use air purifiers with HEPA filters to keep indoor air clean and safe.  
+        - Wear a mask (e.g., N95) if spending extended time outdoors.  
+        - Stay updated with real-time air quality apps to plan outdoor activities.  
+        **Pro Tip**: Incorporate air-purifying plants like peace lilies or snake plants indoors to enhance air quality naturally!
     """,
     'Moderate': """
-        Health: Members of sensitive groups may experience health effects; the general public is less likely to be affected.
-        Actions: Sensitive groups should avoid prolonged outdoor activities. Others should limit exertion.
-        Tips: Wear masks (e.g., N95) outdoors and ensure good indoor ventilation.
+        **Health**: Sensitive groups (e.g., children, elderly, or those with respiratory conditions) may experience health effects; the general public is less affected.  
+        **Actions**: Sensitive groups should avoid strenuous outdoor activities; others should reduce prolonged exposure.  
+        **Tips**:  
+        - Wear N95 masks during outdoor activities to minimize pollutant inhalation.  
+        - Schedule outdoor time for early morning or evening when pollution levels are typically lower.  
+        - Use air quality monitoring apps to stay informed about real-time AQI changes.  
+        **Pro Tip**: Invest in a high-quality air purifier for your home to create a safe indoor environment!
     """,
     'Poor': """
-        Health: Everyone may begin to experience health effects; sensitive groups face more serious effects.
-        Actions: Avoid outdoor activities, especially strenuous ones. Stay indoors with air purifiers.
-        Tips: Seal windows and doors, and use HEPA filters to reduce indoor pollutants.
+        **Health**: Everyone may experience health effects, with sensitive groups facing severe symptoms like coughing or breathing difficulties.  
+        **Actions**: Avoid all outdoor activities, especially strenuous ones, and stay indoors with air purifiers running.  
+        **Tips**:  
+        - Seal windows and doors to block polluted air from entering your home.  
+        - Use air purifiers with both HEPA and activated carbon filters for maximum pollutant removal.  
+        - Stay hydrated and avoid indoor pollutant sources like incense or candles.  
+        **Pro Tip**: Advocate for cleaner air by supporting local policies for reduced emissions, such as promoting public transport or green energy!
     """,
     'Very Poor': """
-        Health: Health alert: everyone may experience serious health effects.
-        Actions: Stay indoors and avoid all outdoor activities. Use air purifiers continuously.
-        Tips: Monitor health symptoms and seek medical advice if respiratory issues arise.
+        **Health**: Serious health risks for everyone, including worsened respiratory and cardiovascular issues, even in healthy individuals.  
+        **Actions**: Stay indoors at all times, avoiding any outdoor exposure, and keep air purifiers running continuously.  
+        **Tips**:  
+        - Monitor for symptoms like shortness of breath or chest pain and seek medical advice if needed.  
+        - Use a humidifier to ease respiratory discomfort caused by dry air.  
+        - Avoid indoor activities that generate pollutants, such as smoking or burning candles.  
+        **Pro Tip**: Join community efforts to reduce pollution, like campaigns against vehicle idling or industrial emissions, to protect future air quality!
     """,
     'Severe': """
-        Health: Emergency conditions; the entire population is likely to be affected.
-        Actions: Remain indoors with all windows and doors sealed. Avoid any physical activity.
-        Tips: Use high-quality air purifiers and consult a doctor for any breathing difficulties.
+        **Health**: Emergency conditions with significant health risks for all, including severe respiratory and heart issues.  
+        **Actions**: Remain indoors with all windows and doors sealed, avoiding any physical activity, indoors or out.  
+        **Tips**:  
+        - Use medical-grade air purifiers to ensure safe indoor air quality.  
+        - Seek immediate medical help if you experience breathing difficulties or heart palpitations.  
+        - Avoid cooking methods that produce smoke, like frying, to minimize indoor pollutants.  
+        **Pro Tip**: Become an advocate for stricter air quality regulations to prevent severe AQI events and protect public health!
     """
 }
+
+# Long-term Consequences of Not Taking Precautions
+long_term_consequences = """
+### 🚨 Long-term Consequences of Ignoring Poor Air Quality (5+ Years)
+Ignoring poor air quality can lead to serious consequences over time. Here’s what could happen if precautions are not taken:
+
+- **Health Impacts**:  
+  - **Chronic Respiratory Diseases**: Prolonged exposure to PM2.5, PM10, and NO2 can cause chronic obstructive pulmonary disease (COPD), asthma, and reduced lung function.  
+  - **Cardiovascular Problems**: Pollutants entering the bloodstream increase the risk of heart attacks, strokes, and hypertension.  
+  - **Cancer Risk**: Long-term exposure to PM2.5 is linked to lung cancer and other respiratory cancers.  
+  - **Neurological Effects**: Emerging studies suggest air pollution may contribute to cognitive decline, dementia, and developmental issues in children.  
+  - **Reduced Life Expectancy**: High AQI levels can shorten life expectancy by several years in heavily polluted areas.  
+
+- **Environmental Impacts**:  
+  - **Worsening Air Quality**: Without action, pollution levels will rise, leading to more frequent "Severe" AQI days.  
+  - **Ecosystem Damage**: Pollutants like ozone harm vegetation, reducing crop yields and threatening food security.  
+  - **Climate Feedback Loops**: Increased pollution worsens climate change, which exacerbates air quality issues through higher temperatures and stagnant air.  
+
+- **Societal Impacts**:  
+  - **Economic Costs**: Rising healthcare costs from pollution-related illnesses and lost productivity due to sick days.  
+  - **Reduced Quality of Life**: Persistent poor air quality limits outdoor activities, impacting physical and mental well-being.  
+
+**Take Action Now**: Support clean energy policies, use public transport, reduce personal emissions, and advocate for green spaces to improve air quality and prevent these long-term consequences.
+"""
 
 # Function to get AQI category based on numerical AQI value
 def get_aqi_category(aqi):
@@ -146,7 +217,7 @@ def get_aqi_category_class(aqi_category):
 
 # UI Title with emoji
 st.title("🌿 Air Quality Index (AQI) Dashboard")
-st.markdown("Explore air quality trends across cities with interactive visualizations, predictions, and insights.")
+st.markdown("Explore air quality trends across cities with interactive visualizations, predictions, and live alerts.")
 
 # Sidebar with enhanced styling
 with st.sidebar:
@@ -158,7 +229,8 @@ with st.sidebar:
             "🔮 Predict AQI",
             "🆚 Compare Cities",
             "🔥 Heatmap",
-            "🏆 Top 10 Polluted Cities"
+            "🏆 Top 10 Polluted Cities",
+            "🚨 Live AQI Alerts"
         ],
         format_func=lambda x: x[2:]  # Remove emoji for cleaner selectbox
     )
@@ -176,7 +248,7 @@ with st.sidebar:
             These parameters are measured in units like µg/m³ (micrograms per cubic meter) or mg/m³ (milligrams per cubic meter) and are combined using a standardized formula to compute the AQI, which ranges from 0 (good) to 500 (hazardous).
         """)
     st.markdown("---")
-    st.info("Select a view to explore AQI data or predict future air quality.")
+    st.info("Select a view to explore AQI data, predict air quality, or check live alerts.")
 
 # ---------------------------------------------
 # 📊 Page 1: City-wise AQI Viewer
@@ -186,7 +258,7 @@ if page == "📊 City-wise AQI":
     with col1:
         city = st.selectbox("Select a city", sorted(df['City'].unique()), key="city_select")
     
-    # Filter data by the entire available dataset (no date range)
+    # Filter data by the entire available dataset
     city_df = df[df['City'] == city]
     
     with st.spinner("Loading AQI trend..."):
@@ -246,9 +318,11 @@ elif page == "🔮 Predict AQI":
                 st.write(f"Predicted AQI: {predicted_aqi:.2f}")
                 st.markdown(f"<span class='{get_aqi_category_class(aqi_category)}'>Air Quality Category: <b>{aqi_category}</b></span>", unsafe_allow_html=True)
                 st.balloons()
-                # Chatbot response
-                st.markdown("AQI Assistant:")
+                # AQI Assistant response
+                st.markdown("### AQI Assistant")
                 st.markdown(f"<div class='chatbot-message'>{aqi_recommendations.get(aqi_category, 'No recommendations available.')}</div>", unsafe_allow_html=True)
+                # Long-term consequences
+                st.markdown(long_term_consequences)
 
 # ---------------------------------------------
 # 🆚 Page 3: Compare Two Cities
@@ -310,7 +384,7 @@ elif page == "🔥 Heatmap":
     st.markdown("Insight: Red indicates higher AQI (worse air quality). Compare monthly patterns across cities.")
 
 # ---------------------------------------------
-# 🏆 Page 5: Top 10 Most Polluted Cities
+# 🏆 Page 5: Top 10 Polluted Cities
 elif page == "🏆 Top 10 Polluted Cities":
     st.header("🏆 Top 10 Most Polluted Cities")
     with st.spinner("Calculating rankings..."):
@@ -321,3 +395,31 @@ elif page == "🏆 Top 10 Polluted Cities":
             use_container_width=True
         )
     st.markdown("Insight: These cities have the highest average AQI, indicating poorer air quality.")
+
+# ---------------------------------------------
+# 🚨 Page 6: Live AQI Alerts
+elif page == "🚨 Live AQI Alerts":
+    st.header("🚨 Live AQI Alerts")
+    st.markdown("Check real-time AQI for a selected city and receive alerts if air quality is poor.")
+
+    city = st.selectbox("Select a city for live AQI", sorted(df['City'].unique()), key="live_city_select")
+    
+    with st.spinner(f"Fetching live AQI for {city}..."):
+        live_aqi = get_live_aqi(city.lower())  # API expects lowercase city names
+        if live_aqi is not None:
+            aqi_category = get_aqi_category(live_aqi)
+            st.write(f"Live AQI for {city}: {live_aqi:.2f}")
+            st.markdown(f"<span class='{get_aqi_category_class(aqi_category)}'>Air Quality Category: <b>{aqi_category}</b></span>", unsafe_allow_html=True)
+            
+            # High AQI Alert
+            if live_aqi > 100:  # Alert for Moderate or worse
+                st.markdown(f"<div class='alert-high-aqi'>⚠️ High AQI Alert: Take precautions as air quality is {aqi_category.lower()}!</div>", unsafe_allow_html=True)
+            
+            # AQI Assistant Recommendations
+            st.markdown("### AQI Assistant")
+            st.markdown(f"<div class='chatbot-message'>{aqi_recommendations.get(aqi_category, 'No recommendations available.')}</div>", unsafe_allow_html=True)
+            
+            # Long-term consequences
+            st.markdown(long_term_consequences)
+        else:
+            st.error(f"Unable to fetch live AQI data for {city}. Please try another city or check your connection.")
